@@ -34,3 +34,5 @@
 # Build Dir
 /build
 /out
+/.vs
+/.vscode
