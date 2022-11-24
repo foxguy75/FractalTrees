@@ -1,0 +1,4 @@
+// The configured options and settings for Tut
+#define SDLTree_VERSION_MAJOR @SDLTree_VERSION_MAJOR@
+#define SDLTree_VERSION_MINOR @SDLTree_VERSION_MINOR@
+#define SDLTree_VERSION_PATCH @SDLTree_VERSION_PATCH@

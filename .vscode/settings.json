@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.in": "cpp",
+        "xstring": "cpp",
+        "memory": "cpp"
+    }
+}
