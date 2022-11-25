@@ -1,5 +1,5 @@
 [requires]
-sdl/2.0.18
+sdl/2.26.0
 sdl_ttf/2.0.18
 fmt/9.1.0
 
