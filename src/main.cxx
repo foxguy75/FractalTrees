@@ -1,85 +1,68 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <config/SDLTree.h>
-#include <fmt/core.h>
+#include <math.h>
 
+#include <application.hxx>
+#include <filesystem>
 #include <iostream>
 #include <memory>
+#include <ranges>
 #include <string>
+#include <subsystem.hxx>
+#include <vector>
 
+[[nodiscard]] std::pair<int, int> generatePoints( std::pair<int, int> theOrigin,
+                                                  float theAngle,
+                                                  int theLength )
+{
+  auto [ x, y ] = theOrigin;
+
+  int yDelta = std::round( theLength * std::sin( theAngle ) );
+  int xDelta = std::round( theLength * std::cos( theAngle ) );
+
+  return std::make_pair<int, int>( x + xDelta, y - yDelta );
+}
+
+void thing( SDL_Renderer* theRenderer, std::pair<int, int> point,
+            float initAngle, float deltaAngle, int length )
+{
+  static constexpr float shrink = 0.67;
+  if( length < 5 )
+  {
+    return;
+  }
+  else
+  {
+    std::pair<int, int> newPoint = generatePoints( point, initAngle, length );
+
+    SDL_RenderDrawLine( theRenderer, point.first, point.second, newPoint.first,
+                        newPoint.second );
+    SDL_RenderPresent( theRenderer );
+
+    length *= shrink;
+    initAngle += deltaAngle;
+    thing( theRenderer, newPoint, initAngle, deltaAngle, length );
+    return;
+  }
+}
 int main( int argc, char** argv )
 {
   constexpr int screenWidth = 64 * 16;
   constexpr int screenHight = 32 * 16;
 
-  if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-  {
-    printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-  }
-  else
-  {
-    if( TTF_Init() < 0 )
-    {
-      printf( "TTF could not initialize! SDL_Error: %s\n", TTF_GetError() );
-    }
-    else
-    {
-      std::string version{
-          fmt::format( "SDL Tree Version: {}.{}.{}", SDLTree_VERSION_MAJOR,
-                       SDLTree_VERSION_MINOR, SDLTree_VERSION_PATCH ) };
+  Application app{};
 
-      std::unique_ptr<SDL_Window, decltype( &SDL_DestroyWindow )> window{
-          SDL_CreateWindow( "Test Window", SDL_WINDOWPOS_CENTERED,
-                            SDL_WINDOWPOS_CENTERED, screenWidth, screenHight,
-                            SDL_WINDOW_SHOWN ),
-          SDL_DestroyWindow };
+  SDL_SetRenderDrawColor( app.getRenderer(), 255, 255, 255, 0 );
 
-      std::unique_ptr<SDL_Renderer, decltype( &SDL_DestroyRenderer )> renderer{
-          SDL_CreateRenderer( window.get(), -1, SDL_RENDERER_ACCELERATED ),
-          SDL_DestroyRenderer };
+  float initAngle{ M_PI * .5 };
+  float deltaAngle{ 0.698132 };
+  // float deltaAngle{ M_PI * .5 };
 
-      std::unique_ptr<TTF_Font, decltype( &TTF_CloseFont )> font{
-          TTF_OpenFont( "/Users/bencamburn/Documents/repos/sdlTree/assets/"
-                        "FiraCode-Retina.ttf",
-                        16 ),
-          TTF_CloseFont };
+  int length = screenHight - ( screenHight - screenHight / 4 );
 
-      SDL_Color black{ 255, 255, 255, 255 };
+  std::pair<int, int> pointsToDraw{ screenWidth / 2, screenHight };
+  thing( app.getRenderer(), pointsToDraw, initAngle, deltaAngle, length );
 
-      std::unique_ptr<SDL_Surface, decltype( &SDL_FreeSurface )> textSurface{
-          TTF_RenderText_Solid( font.get(), version.c_str(), black ),
-          SDL_FreeSurface };
+  app.run();
 
-      std::unique_ptr<SDL_Texture, decltype( &SDL_DestroyTexture )> textTexture{
-          SDL_CreateTextureFromSurface( renderer.get(), textSurface.get() ),
-          SDL_DestroyTexture };
-
-      int padding{ 5 };
-
-      SDL_Rect dest{ screenWidth - textSurface->w - padding,
-                     screenHight - textSurface->h - padding, textSurface->w,
-                     textSurface->h };
-
-      int quit{ 0 };
-
-      SDL_Event event;
-
-      while( !quit )
-      {
-        while( SDL_PollEvent( &event ) == 1 )
-        {
-          if( event.type == SDL_QUIT )
-          {
-            quit = 1;
-          }
-        }
-        SDL_RenderCopy( renderer.get(), textTexture.get(), nullptr, &dest );
-        SDL_RenderPresent( renderer.get() );
-      }
-    }
-    TTF_Quit();
-
-    SDL_Quit();
-  }
   return 0;
 }
