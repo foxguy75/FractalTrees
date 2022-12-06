@@ -1,6 +1,6 @@
-add_library( Subsystem subsystem.cxx subsystem.hxx )
-add_library( Application application.cxx application.hxx )
-add_executable( SDLTree main.cxx  )
+add_library( Subsystem Subsystem.cxx Subsystem.hxx )
+add_library( Application Application.cxx Application.hxx )
+add_executable( SDLTree main.cxx TreeNode.hxx )
 
 set_property(TARGET Subsystem PROPERTY CXX_STANDARD 20)
 set_property(TARGET Application PROPERTY CXX_STANDARD 20)

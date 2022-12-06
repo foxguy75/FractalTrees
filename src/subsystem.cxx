@@ -2,7 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <fmt/core.h>
 
-#include <subsystem.hxx>
+#include <Subsystem.hxx>
 
 Subsystem::Subsystem() : m_successfullyInit{ true }
 {

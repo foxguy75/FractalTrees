@@ -5,13 +5,17 @@
 #include <SDL_ttf.h>
 
 #include <memory>
+#include <string>
 #include <subsystem.hxx>
 
 class Application
 {
  public:
   Application();
-  ~Application();
+  Application( int theScreenWidth, int theScreenHight );
+  Application( std::string theName, int theScreenWidth, int theScreenHight );
+  Application( std::string theName );
+  ~Application() = default;
 
   void run();
 

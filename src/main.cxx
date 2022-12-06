@@ -1,14 +1,9 @@
 #include <SDL2/SDL.h>
 #include <math.h>
 
-#include <application.hxx>
-#include <filesystem>
-#include <iostream>
+#include <Application.hxx>
+#include <TreeNode.hxx>
 #include <memory>
-#include <ranges>
-#include <string>
-#include <subsystem.hxx>
-#include <vector>
 
 [[nodiscard]] std::pair<int, int> generatePoints( std::pair<int, int> theOrigin,
                                                   float theAngle,
@@ -22,45 +17,76 @@
   return std::make_pair<int, int>( x + xDelta, y - yDelta );
 }
 
-void thing( SDL_Renderer* theRenderer, std::pair<int, int> point,
-            float initAngle, float deltaAngle, int length )
+void generatorTreeNodes( TreeNode<std::pair<int, int>>* node,
+                         const int maxLevel, int currentLevel, float initAngle,
+                         float deltaAngle, int length )
 {
-  static constexpr float shrink = 0.67;
-  if( length < 5 )
+  if( currentLevel < maxLevel )
   {
-    return;
-  }
-  else
-  {
-    std::pair<int, int> newPoint = generatePoints( point, initAngle, length );
+    length *= 0.67;
+    initAngle += deltaAngle;
+    node->left = std::make_unique<TreeNode<std::pair<int, int>>>(
+        generatePoints( node->data, initAngle, length ) );
 
-    SDL_RenderDrawLine( theRenderer, point.first, point.second, newPoint.first,
-                        newPoint.second );
+    float tempAngle = initAngle - deltaAngle * 2;
+
+    node->right = std::make_unique<TreeNode<std::pair<int, int>>>(
+        generatePoints( node->data, tempAngle, length ) );
+
+    int newLevel = currentLevel + 1;
+
+    generatorTreeNodes( node->left.get(), maxLevel, newLevel, initAngle,
+                        deltaAngle, length );
+    generatorTreeNodes( node->right.get(), maxLevel, newLevel, tempAngle,
+                        deltaAngle, length );
+  }
+  return;
+}
+
+void drawTree( TreeNode<std::pair<int, int>>* node, SDL_Renderer* theRenderer )
+{
+  if( node->left != nullptr && node->right != nullptr )
+  {
+    SDL_RenderDrawLine( theRenderer, node->data.first, node->data.second,
+                        node->left->data.first, node->left->data.second );
+
+    SDL_RenderDrawLine( theRenderer, node->data.first, node->data.second,
+                        node->right->data.first, node->right->data.second );
+
     SDL_RenderPresent( theRenderer );
 
-    length *= shrink;
-    initAngle += deltaAngle;
-    thing( theRenderer, newPoint, initAngle, deltaAngle, length );
-    return;
+    drawTree( node->left.get(), theRenderer );
+    drawTree( node->right.get(), theRenderer );
   }
+  return;
 }
+
 int main( int argc, char** argv )
 {
-  constexpr int screenWidth = 64 * 16;
-  constexpr int screenHight = 32 * 16;
+  int screenWidth = 64 * 16;
+  int screenHight = 32 * 16;
 
-  Application app{};
+  Application app{ "Fractal Trees" };
 
   SDL_SetRenderDrawColor( app.getRenderer(), 255, 255, 255, 0 );
 
   float initAngle{ M_PI * .5 };
-  float deltaAngle{ 0.698132 };
-  // float deltaAngle{ M_PI * .5 };
+  float deltaAngle{ 0.785398 };
 
-  int length = screenHight - ( screenHight - screenHight / 4 );
+  const int MAX_LEVEL{ 10 };
+  constexpr float shrink = 0.67;
+  int length = screenHight / 4;
 
-  std::pair<int, int> pointsToDraw{ screenWidth / 2, screenHight };
-  thing( app.getRenderer(), pointsToDraw, initAngle, deltaAngle, length );
+  std::unique_ptr<TreeNode<std::pair<int, int>>> head =
+      std::make_unique<TreeNode<std::pair<int, int>>>(
+          std::make_pair( screenWidth / 2, screenHight * .75 ) );
+
+  SDL_RenderDrawLine( app.getRenderer(), screenWidth / 2, screenHight,
+                      head->data.first, head->data.second );
+
+  generatorTreeNodes( head.get(), MAX_LEVEL, 0, initAngle, deltaAngle, length );
+
+  drawTree( head.get(), app.getRenderer() );
 
   app.run();
 
