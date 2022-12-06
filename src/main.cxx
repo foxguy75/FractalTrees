@@ -1,85 +1,94 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <config/SDLTree.h>
-#include <fmt/core.h>
+#include <math.h>
 
-#include <iostream>
+#include <Application.hxx>
+#include <TreeNode.hxx>
 #include <memory>
-#include <string>
+
+[[nodiscard]] std::pair<int, int> generatePoints( std::pair<int, int> theOrigin,
+                                                  float theAngle,
+                                                  int theLength )
+{
+  auto [ x, y ] = theOrigin;
+
+  int yDelta = std::round( theLength * std::sin( theAngle ) );
+  int xDelta = std::round( theLength * std::cos( theAngle ) );
+
+  return std::make_pair<int, int>( x + xDelta, y - yDelta );
+}
+
+void generatorTreeNodes( TreeNode<std::pair<int, int>>* node,
+                         const int maxLevel, int currentLevel, float initAngle,
+                         float deltaAngle, int length )
+{
+  if( currentLevel < maxLevel )
+  {
+    length *= 0.67;
+    initAngle += deltaAngle;
+    node->left = std::make_unique<TreeNode<std::pair<int, int>>>(
+        generatePoints( node->data, initAngle, length ) );
+
+    float tempAngle = initAngle - deltaAngle * 2;
+
+    node->right = std::make_unique<TreeNode<std::pair<int, int>>>(
+        generatePoints( node->data, tempAngle, length ) );
+
+    int newLevel = currentLevel + 1;
+
+    generatorTreeNodes( node->left.get(), maxLevel, newLevel, initAngle,
+                        deltaAngle, length );
+    generatorTreeNodes( node->right.get(), maxLevel, newLevel, tempAngle,
+                        deltaAngle, length );
+  }
+  return;
+}
+
+void drawTree( TreeNode<std::pair<int, int>>* node, SDL_Renderer* theRenderer )
+{
+  if( node->left != nullptr && node->right != nullptr )
+  {
+    SDL_RenderDrawLine( theRenderer, node->data.first, node->data.second,
+                        node->left->data.first, node->left->data.second );
+
+    SDL_RenderDrawLine( theRenderer, node->data.first, node->data.second,
+                        node->right->data.first, node->right->data.second );
+
+    SDL_RenderPresent( theRenderer );
+
+    drawTree( node->left.get(), theRenderer );
+    drawTree( node->right.get(), theRenderer );
+  }
+  return;
+}
 
 int main( int argc, char** argv )
 {
-  constexpr int screenWidth = 64 * 16;
-  constexpr int screenHight = 32 * 16;
+  int screenWidth = 64 * 16;
+  int screenHight = 32 * 16;
 
-  if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-  {
-    printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-  }
-  else
-  {
-    if( TTF_Init() < 0 )
-    {
-      printf( "TTF could not initialize! SDL_Error: %s\n", TTF_GetError() );
-    }
-    else
-    {
-      std::string version{
-          fmt::format( "SDL Tree Version: {}.{}.{}", SDLTree_VERSION_MAJOR,
-                       SDLTree_VERSION_MINOR, SDLTree_VERSION_PATCH ) };
+  Application app{ "Fractal Trees" };
 
-      std::unique_ptr<SDL_Window, decltype( &SDL_DestroyWindow )> window{
-          SDL_CreateWindow( "Test Window", SDL_WINDOWPOS_CENTERED,
-                            SDL_WINDOWPOS_CENTERED, screenWidth, screenHight,
-                            SDL_WINDOW_SHOWN ),
-          SDL_DestroyWindow };
+  SDL_SetRenderDrawColor( app.getRenderer(), 255, 255, 255, 0 );
 
-      std::unique_ptr<SDL_Renderer, decltype( &SDL_DestroyRenderer )> renderer{
-          SDL_CreateRenderer( window.get(), -1, SDL_RENDERER_ACCELERATED ),
-          SDL_DestroyRenderer };
+  float initAngle{ M_PI * .5 };
+  float deltaAngle{ 0.785398 };
 
-      std::unique_ptr<TTF_Font, decltype( &TTF_CloseFont )> font{
-          TTF_OpenFont( "/Users/bencamburn/Documents/repos/sdlTree/assets/"
-                        "FiraCode-Retina.ttf",
-                        16 ),
-          TTF_CloseFont };
+  const int MAX_LEVEL{ 10 };
+  constexpr float shrink = 0.67;
+  int length = screenHight / 4;
 
-      SDL_Color black{ 255, 255, 255, 255 };
+  std::unique_ptr<TreeNode<std::pair<int, int>>> head =
+      std::make_unique<TreeNode<std::pair<int, int>>>(
+          std::make_pair( screenWidth / 2, screenHight * .75 ) );
 
-      std::unique_ptr<SDL_Surface, decltype( &SDL_FreeSurface )> textSurface{
-          TTF_RenderText_Solid( font.get(), version.c_str(), black ),
-          SDL_FreeSurface };
+  SDL_RenderDrawLine( app.getRenderer(), screenWidth / 2, screenHight,
+                      head->data.first, head->data.second );
 
-      std::unique_ptr<SDL_Texture, decltype( &SDL_DestroyTexture )> textTexture{
-          SDL_CreateTextureFromSurface( renderer.get(), textSurface.get() ),
-          SDL_DestroyTexture };
+  generatorTreeNodes( head.get(), MAX_LEVEL, 0, initAngle, deltaAngle, length );
 
-      int padding{ 5 };
+  drawTree( head.get(), app.getRenderer() );
 
-      SDL_Rect dest{ screenWidth - textSurface->w - padding,
-                     screenHight - textSurface->h - padding, textSurface->w,
-                     textSurface->h };
+  app.run();
 
-      int quit{ 0 };
-
-      SDL_Event event;
-
-      while( !quit )
-      {
-        while( SDL_PollEvent( &event ) == 1 )
-        {
-          if( event.type == SDL_QUIT )
-          {
-            quit = 1;
-          }
-        }
-        SDL_RenderCopy( renderer.get(), textTexture.get(), nullptr, &dest );
-        SDL_RenderPresent( renderer.get() );
-      }
-    }
-    TTF_Quit();
-
-    SDL_Quit();
-  }
   return 0;
 }
