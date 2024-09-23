@@ -1,94 +1,36 @@
-#include <SDL2/SDL.h>
-#include <math.h>
+#include <iostream>
+#include <string_view>
+#include <vector>
 
-#include <Application.hxx>
-#include <TreeNode.hxx>
-#include <memory>
+#include <application/application.hxx>
+#include <game_components/card.hxx>
 
-[[nodiscard]] std::pair<int, int> generatePoints( std::pair<int, int> theOrigin,
-                                                  float theAngle,
-                                                  int theLength )
+#include <fmt/format.h>
+
+int main( const int argc, char const* const* const argv )
 {
-  auto [ x, y ] = theOrigin;
+    constexpr std::string_view asset_location{};
+    std::vector<std::string_view> args{ argv, std::next( argv, static_cast<std::ptrdiff_t>( argc ) ) };
 
-  int yDelta = std::round( theLength * std::sin( theAngle ) );
-  int xDelta = std::round( theLength * std::cos( theAngle ) );
+    application::Game game{ "Euchre Clone", 1920, 1080 };
 
-  return std::make_pair<int, int>( x + xDelta, y - yDelta );
-}
+    game.add_sprite_atlas( "card_atlas", "E:\\Repos\\sdlTree\\assets\\cards\\Playing_Cards.png",
+                           "E:\\Repos\\sdlTree\\assets\\meta_data\\card_meta_data.json" );
 
-void generatorTreeNodes( TreeNode<std::pair<int, int>>* node,
-                         const int maxLevel, int currentLevel, float initAngle,
-                         float deltaAngle, int length )
-{
-  if( currentLevel < maxLevel )
-  {
-    length *= 0.67;
-    initAngle += deltaAngle;
-    node->left = std::make_unique<TreeNode<std::pair<int, int>>>(
-        generatePoints( node->data, initAngle, length ) );
+    // for( int suit = 0; suit < 4; ++suit )
+    // {
+    //       for( int rank = 9; rank < 15; ++rank )
+    //       {
+    //           app.deck.push_back( { rank, static_cast<playing_cards::Suit_Value>( suit ) } );
+    //       }
+    // }
 
-    float tempAngle = initAngle - deltaAngle * 2;
+    game.deck.push_back( { 2, playing_cards::Suit_Value::Hearts, game.get_atlas( "card_atlas" ), { 20, 20 } } );
+    game.deck.push_back( { 7, playing_cards::Suit_Value::Clubs, game.get_atlas( "card_atlas" ), { 160, 20 } } );
+    game.deck.push_back( { 13, playing_cards::Suit_Value::Diamonds, game.get_atlas( "card_atlas" ), { 300, 20 } } );
+    game.deck.push_back( { 9, playing_cards::Suit_Value::Spades, game.get_atlas( "card_atlas" ), { 440, 20 } } );
 
-    node->right = std::make_unique<TreeNode<std::pair<int, int>>>(
-        generatePoints( node->data, tempAngle, length ) );
+    game.run();
 
-    int newLevel = currentLevel + 1;
-
-    generatorTreeNodes( node->left.get(), maxLevel, newLevel, initAngle,
-                        deltaAngle, length );
-    generatorTreeNodes( node->right.get(), maxLevel, newLevel, tempAngle,
-                        deltaAngle, length );
-  }
-  return;
-}
-
-void drawTree( TreeNode<std::pair<int, int>>* node, SDL_Renderer* theRenderer )
-{
-  if( node->left != nullptr && node->right != nullptr )
-  {
-    SDL_RenderDrawLine( theRenderer, node->data.first, node->data.second,
-                        node->left->data.first, node->left->data.second );
-
-    SDL_RenderDrawLine( theRenderer, node->data.first, node->data.second,
-                        node->right->data.first, node->right->data.second );
-
-    SDL_RenderPresent( theRenderer );
-
-    drawTree( node->left.get(), theRenderer );
-    drawTree( node->right.get(), theRenderer );
-  }
-  return;
-}
-
-int main( int argc, char** argv )
-{
-  int screenWidth = 64 * 16;
-  int screenHight = 32 * 16;
-
-  Application app{ "Fractal Trees" };
-
-  SDL_SetRenderDrawColor( app.getRenderer(), 255, 255, 255, 0 );
-
-  float initAngle{ M_PI * .5 };
-  float deltaAngle{ 0.785398 };
-
-  const int MAX_LEVEL{ 10 };
-  constexpr float shrink = 0.67;
-  int length = screenHight / 4;
-
-  std::unique_ptr<TreeNode<std::pair<int, int>>> head =
-      std::make_unique<TreeNode<std::pair<int, int>>>(
-          std::make_pair( screenWidth / 2, screenHight * .75 ) );
-
-  SDL_RenderDrawLine( app.getRenderer(), screenWidth / 2, screenHight,
-                      head->data.first, head->data.second );
-
-  generatorTreeNodes( head.get(), MAX_LEVEL, 0, initAngle, deltaAngle, length );
-
-  drawTree( head.get(), app.getRenderer() );
-
-  app.run();
-
-  return 0;
+    return 0;
 }

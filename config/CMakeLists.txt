@@ -1,1 +1,1 @@
-configure_file( SDLTree.h.in SDLTree.h )
+configure_file( euchre_info.h.in euchre_info.h )

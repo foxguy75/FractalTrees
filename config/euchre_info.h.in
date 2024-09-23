@@ -1,0 +1,6 @@
+// The configured options and settings for Tut
+// clang-format off
+#define Euchre_VERSION_MAJOR @Euchre_VERSION_MAJOR@
+#define Euchre_VERSION_MINOR @Euchre_VERSION_MINOR@
+#define Euchre_VERSION_PATCH @Euchre_VERSION_PATCH@
+// clang-format on

@@ -1,26 +1,20 @@
-add_library( Subsystem Subsystem.cxx Subsystem.hxx )
-add_library( Application Application.cxx Application.hxx )
-add_executable( SDLTree main.cxx TreeNode.hxx )
+add_subdirectory(application)
+add_subdirectory(game_components)
 
-set_property(TARGET Subsystem PROPERTY CXX_STANDARD 20)
-set_property(TARGET Application PROPERTY CXX_STANDARD 20)
-set_property(TARGET SDLTree PROPERTY CXX_STANDARD 20)
+add_executable( ${PROJECT_NAME} main.cxx )
 
-target_include_directories( SDLTree PUBLIC 
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+
+find_package( SDL2 REQUIRED )
+find_package( SDL2_ttf REQUIRED )
+find_package( fmt REQUIRED )
+
+target_include_directories( ${PROJECT_NAME} PUBLIC 
     "${PROJECT_BINARY_DIR}"
     "${PROJECT_SOURCE_DIR}/src"
+    SDL2::SDL2 
+    SDL2_ttf::SDL2_ttf-static 
+    fmt::fmt
     )
 
-target_include_directories( Subsystem PUBLIC 
-    "${PROJECT_BINARY_DIR}"
-    "${PROJECT_SOURCE_DIR}/src"
-    )
-
-target_include_directories( Application PUBLIC 
-    "${PROJECT_BINARY_DIR}"
-    "${PROJECT_SOURCE_DIR}/src"
-    )
-
-target_link_libraries( Application ${CONAN_LIBS} Subsystem )
-
-target_link_libraries( SDLTree ${CONAN_LIBS} Subsystem Application )
+target_link_libraries( ${PROJECT_NAME} SDL2::SDL2 SDL2_ttf::SDL2_ttf-static fmt::fmt Subsystem Application Components )
