@@ -20,4 +20,4 @@ target_include_directories( Application PUBLIC
     rapidjson
     )
 
-target_link_libraries( Application rapidjson SDL2::SDL2 SDL2_ttf::SDL2_ttf-static SDL2_image::SDL2_image fmt::fmt Subsystem )
+target_link_libraries( Application rapidjson SDL2::SDL2 SDL2_ttf::SDL2_ttf-static SDL2_image::SDL2_image fmt::fmt Subsystem Components )

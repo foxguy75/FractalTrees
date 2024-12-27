@@ -1,4 +1,4 @@
-add_library( Components card.hxx card.cxx )
+add_library( Components card.hxx card.cxx deck.hxx deck.cxx )
 
 find_package( fmt REQUIRED )
 find_package( SDL2 REQUIRED )

@@ -36,7 +36,7 @@ namespace application
 
             doc.Parse( json_text.c_str() );
 
-            rapidjson::Value* sprite_json_body = rapidjson::Pointer( "/sprite" ).Get( doc );
+            rapidjson::Value* sprite_json_body = rapidjson::Pointer( "/sprites" ).Get( doc );
 
             if( !sprite_json_body->IsArray() )
             {

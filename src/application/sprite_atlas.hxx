@@ -33,12 +33,6 @@ namespace application
 
             std::vector<Sprite> m_sprites{};
         };
-
-        struct Image
-        {
-            SDL_Rect m_rect{ 0, 0, 0, 0 };
-            const Atlas* m_atlas{ nullptr };
-        };
     }  // namespace sprite
 
 }  // namespace application

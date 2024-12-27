@@ -42,19 +42,19 @@ namespace playing_cards
         Suit_Value m_suite{};
         SDL_Point m_position{ 0, 0 };
 
+       private:
         const application::sprite::Atlas* m_atlas{};
         const application::sprite::Sprite* m_current_sprite{};
 
-       private:
         SDL_Point m_previous_mouse_pos{ 0, 0 };
 
         bool m_is_selected{ false };
         bool m_is_left_selected{ false };
         bool m_is_right_selected{ false };
-
         void check_if_selected();
         void advance_sprite();
         void handle_mouse_moment_event();
+        // #2F7B23
     };
 }  // namespace playing_cards
 

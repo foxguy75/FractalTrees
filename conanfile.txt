@@ -4,6 +4,7 @@ sdl_ttf/2.22.0
 fmt/9.1.0
 sdl_image/2.6.3
 rapidjson/cci.20230929
+imgui/cci.20230105+1.89.2.docking
 
 [generators]
 CMakeDeps

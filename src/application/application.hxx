@@ -12,11 +12,9 @@
 #undef main
 #include <SDL_ttf.h>
 
-#include <subsystem/subsystem.hxx>
-
-#include <game_components/card.hxx>
-
+#include <game_components/deck.hxx>
 #include <sprite_atlas.hxx>
+#include <subsystem/subsystem.hxx>
 
 namespace fs = std::filesystem;
 
@@ -57,9 +55,9 @@ namespace application
         int m_screenWidth{ 64 * 16 };
         int m_screenHight{ 32 * 16 };
 
-        std::vector<playing_cards::Card> deck{};
+        void load_game_components();
 
-        void shuffle_deck();
+        void shuffle_deck() { m_deck.shuffle(); }
 
         Version m_version{};
 
@@ -80,6 +78,9 @@ namespace application
             TTF_OpenFont( "E:\\Repos\\sdlTree\\assets\\fonts\\FiraCode-Regular.ttf", 16 ), TTF_CloseFont };
 
         void display_version_info();
+
+       public:
+        Deck m_deck{ m_screenWidth, m_screenHight, m_renderer.get() };
 
     };  // namespace std::filesystem
 

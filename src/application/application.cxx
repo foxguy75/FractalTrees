@@ -5,11 +5,14 @@
 #include <application.hxx>
 #include <chrono>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <thread>
 
 #include <SDL_events.h>
 #include <SDL_mouse.h>
+
+#include <game_components/card.hxx>
 
 namespace
 {
@@ -86,14 +89,14 @@ namespace application
                 }
             }
 
-            std::sort( deck.begin(), deck.end(), []( const playing_cards::Card& a, const playing_cards::Card& b )
-                       { return a.m_render_priority < b.m_render_priority; } );
-
-            for( auto& card : deck )
+            for( auto& card : m_deck )
             {
-                card.handle_event( event );
-                card.draw( m_renderer.get() );
+                card->handle_event( event );
+                card->draw( m_renderer.get() );
             }
+
+            m_deck.handle_event( event );
+            m_deck.draw();
 
             display_version_info();
 
@@ -101,13 +104,16 @@ namespace application
         }
     }
 
-    void Game::shuffle_deck()
+    void Game::load_game_components()
     {
-        std::random_device rd{};
-
-        std::mt19937 g( rd() );
-
-        std::shuffle( deck.begin(), deck.end(), g );
+        m_deck.add( std::shared_ptr<playing_cards::Card>(
+            new playing_cards::Card{ 2, playing_cards::Suit_Value::Hearts, get_atlas( "card_atlas" ), { 20, 20 } } ) );
+        m_deck.add( std::shared_ptr<playing_cards::Card>(
+            new playing_cards::Card{ 7, playing_cards::Suit_Value::Clubs, get_atlas( "card_atlas" ), { 160, 20 } } ) );
+        m_deck.add( std::shared_ptr<playing_cards::Card>( new playing_cards::Card{
+            13, playing_cards::Suit_Value::Diamonds, get_atlas( "card_atlas" ), { 300, 20 } } ) );
+        m_deck.add( std::shared_ptr<playing_cards::Card>(
+            new playing_cards::Card{ 9, playing_cards::Suit_Value::Spades, get_atlas( "card_atlas" ), { 440, 20 } } ) );
     }
 
     std::string Version::get_string() const { return fmt::format( "Version: {}.{}.{}", m_major, m_minor, m_patch ); }
